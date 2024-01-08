@@ -22,6 +22,7 @@ let peerConfiguration = {
 let localStream;
 let remoteStream;
 let peerConnection;
+let didIOffer = false;
 
 const constraints = {
   audio: true,
@@ -41,6 +42,7 @@ const call = async (e) => {
     const offer = await peerConnection.createOffer();
     console.log(offer);
     peerConnection.setLocalDescription(offer);
+    didIOffer = true;
     socket.emit("newOffer", offer);
   } catch (error) {
     console.log(error);
@@ -58,6 +60,13 @@ const createPeerConnection = () => {
     peerConnection.addEventListener("icecandidate", (e) => {
       console.log(".......ice candidate found .....");
       console.log(e);
+      if (e.candidate) {
+        socket.emit("sendIceCandidateToSignalingServer", {
+          iceCandidate: e.candidate,
+          iceUserName: userName,
+          didIOffer,
+        });
+      }
     });
     resolve();
   });

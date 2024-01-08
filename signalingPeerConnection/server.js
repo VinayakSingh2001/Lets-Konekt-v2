@@ -43,16 +43,33 @@ io.on("connection", (socket) => {
     userName: userName,
   });
 
-  socket.on("newOffer", (onewOffer) => {
+  socket.on("newOffer", (newOffer) => {
     offers.push({
       offererUserName: userName,
       offer: newOffer,
       offerIceCandidates: [],
       answererUsername: null,
       answer: null,
-      answerIceCandidates: []
+      answerIceCandidates: [],
     });
+    // console.log(newOffer.sdp.slice(50));
     //send out to all connected sockets except the caller
-    socket.broadcast.emit('newOfferAwating', offers.slice(-1))
+    socket.broadcast.emit("newOfferAwating", offers.slice(-1));
+  });
+
+  socket.on("sendIceCandidateToSignalingServer", (iceCandidateObj) => {
+    const { didIoffer, iceUserName, iceCandidate } = iceCandidateObj;
+    console.log(iceCandidate);
+    if (didIoffer) {
+      const offerInOffers = offers.find(
+        (o) => o.offererUserName === iceUserName
+      );
+      if (offerInOffers) {
+        offerInOffers.offerIceCandidates.push(iceCandidate);
+        //come back to this...
+        //if the answerer is already here, emit the iceCandidates to that user
+      }
+    }
+    console.log(offers);
   });
 });

@@ -43,6 +43,11 @@ io.on("connection", (socket) => {
     userName: userName,
   });
 
+  //a new client has joined. If there are any offers available, emit them out
+  if(offers.length){
+    socket.emit('availableOffers', offers);
+  }
+
   socket.on("newOffer", (newOffer) => {
     offers.push({
       offererUserName: userName,

@@ -30,10 +30,7 @@ const constraints = {
 };
 
 const call = async (e) => {
-  const stream = await navigator.mediaDevices.getUserMedia(constraints);
-  console.log(stream);
-  localVideoEl.srcObject = stream;
-  localStream = stream;
+  await fetchUserMedia();
 
   await createPeerConnection();
 
@@ -49,7 +46,33 @@ const call = async (e) => {
   }
 };
 
-const createPeerConnection = () => {
+const answerOffer = async (offerObj) => {
+  await fetchUserMedia();
+  await createPeerConnection(offerObj);
+  const answer = await peerConnection.createAnswer({});
+  peerConnection.setLocalDescription(answer);
+  console.log(offerObj);
+  console.log(answer);
+};
+
+const fetchUserMedia = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        // audio: true,
+      });
+      localVideoEl.srcObject = stream;
+      localStream = stream;
+      resolve();
+    } catch (err) {
+      console.log(err);
+      reject();
+    }
+  });
+};
+
+const createPeerConnection = (offerObj) => {
   return new Promise(async (resolve, reject) => {
     peerConnection = await new RTCPeerConnection(peerConfiguration);
 
@@ -68,6 +91,15 @@ const createPeerConnection = () => {
         });
       }
     });
+
+    if (offerObj) {
+      //this won't be set when called from call();
+      //will be set when we call from answerOffer()
+      // console.log(peerConnection.signalingState) //should be stable because no setDesc has been run yet
+      await peerConnection.setRemoteDescription(offerObj.offer);
+      // console.log(peerConnection.signalingState) //should be have-remote-offer, because client2 has setRemoteDesc on the offer
+    }
+
     resolve();
   });
 };

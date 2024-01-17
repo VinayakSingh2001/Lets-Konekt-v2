@@ -57,6 +57,9 @@ const answerOffer = async (offerObj) => {
 
 const fetchUserMedia = () => {
   return new Promise(async (resolve, reject) => {
+    //RTCPeerConnection is the thing that creates the connection
+    //we can pass a config object, and that config object can contain stun servers
+    //which will fetch us ICE candidates
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
@@ -77,6 +80,8 @@ const createPeerConnection = (offerObj) => {
     peerConnection = await new RTCPeerConnection(peerConfiguration);
 
     localStream.getTracks().forEach((track) => {
+      //add localtracks so that they can be sent once the connection is established
+
       peerConnection.addTrack(track, localStream);
     });
 
